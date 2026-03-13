@@ -1,0 +1,2 @@
+[console_scripts]
+cli-anything-payloads = cli_anything.payloads.payloads_cli:main
