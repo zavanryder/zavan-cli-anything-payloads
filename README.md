@@ -30,10 +30,10 @@ PayloadsAllTheThings is a massive reference repo: 64 vulnerability categories, 1
 
 ## Installation
 
-PayloadsAllTheThings must be cloned **into the root of this repository** so it lives at `PayloadOfAllThings/PayloadsAllTheThings/`. The CLI expects this layout:
+PayloadsAllTheThings must be cloned **into the root of this repository** so it lives at `zavan-cli-anything-payloads/PayloadsAllTheThings/`. The CLI expects this layout:
 
 ```
-PayloadOfAllThings/          # <-- this repo
+zavan-cli-anything-payloads/          # <-- this repo
 ├── PayloadsAllTheThings/    # <-- clone goes HERE
 ├── agent-harness/
 └── README.md
@@ -41,7 +41,7 @@ PayloadOfAllThings/          # <-- this repo
 
 ```bash
 # 1. Clone PayloadsAllTheThings into the repo root (if not already present)
-cd PayloadOfAllThings
+cd zavan-cli-anything-payloads
 git clone https://github.com/swisskyrepo/PayloadsAllTheThings.git
 
 # 2. Create a venv and install the CLI
@@ -59,7 +59,7 @@ cli-anything-payloads --version
 
 ```bash
 # Set the repo path (points to the PayloadsAllTheThings/ directory inside this repo)
-export PAYLOADS_REPO=/path/to/PayloadOfAllThings/PayloadsAllTheThings
+export PAYLOADS_REPO=/path/to/zavan-cli-anything-payloads/PayloadsAllTheThings
 
 # Or pass it every time with --repo
 cli-anything-payloads --repo ./PayloadsAllTheThings list
@@ -264,9 +264,9 @@ Make sure the venv is activated in your shell before starting Claude Code, or ac
 
 ```bash
 # Option A: activate before launching Claude
-cd PayloadOfAllThings/agent-harness
+cd zavan-cli-anything-payloads/agent-harness
 source .venv/bin/activate
-export PAYLOADS_REPO=/path/to/PayloadOfAllThings/PayloadsAllTheThings
+export PAYLOADS_REPO=/path/to/zavan-cli-anything-payloads/PayloadsAllTheThings
 claude
 
 # Option B: Claude can activate inline in each Bash call
@@ -401,7 +401,7 @@ The typical Claude Code workflow with this tool is:
 ## Project Structure
 
 ```
-PayloadOfAllThings/
+zavan-cli-anything-payloads/
 ├── README.md                          # This file
 ├── CLAUDE.md                          # Agent instructions (auto-loaded by Claude Code)
 ├── PayloadsAllTheThings/              # The upstream repo (hard dependency)
@@ -438,7 +438,7 @@ pip install pytest
 
 # Run all tests against the installed CLI
 # PAYLOADS_REPO must point to the PayloadsAllTheThings/ directory inside this repo
-export PAYLOADS_REPO=/path/to/PayloadOfAllThings/PayloadsAllTheThings
+export PAYLOADS_REPO=/path/to/zavan-cli-anything-payloads/PayloadsAllTheThings
 CLI_ANYTHING_FORCE_INSTALLED=1 python3 -m pytest cli_anything/payloads/tests/ -v -s
 ```
 
