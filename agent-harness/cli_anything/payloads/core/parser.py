@@ -163,7 +163,7 @@ def extract_sections(file_path: str) -> list[dict]:
     sections = parse_markdown(file_path)
     flat = []
 
-    def _flatten(section_list: list[Section], depth: int = 0):
+    def _flatten(section_list: list[Section]):
         for sec in section_list:
             flat.append({
                 "title": sec.title,
@@ -171,7 +171,7 @@ def extract_sections(file_path: str) -> list[dict]:
                 "line_start": sec.line_start,
                 "code_block_count": len(sec.code_blocks),
             })
-            _flatten(sec.subsections, depth + 1)
+            _flatten(sec.subsections)
 
     _flatten(sections)
     return flat

@@ -7,6 +7,8 @@ import os
 import shutil
 import subprocess
 
+from cli_anything.payloads.core.repository import _is_repo
+
 
 def find_repo_from_env() -> str | None:
     """Check environment variable for repo path."""
@@ -63,27 +65,17 @@ def validate_repo(path: str) -> dict:
     Raises:
         RuntimeError: If the path is not a valid repo.
     """
-    if not os.path.isdir(path):
+    if not _is_repo(path):
         raise RuntimeError(
-            f"PayloadsAllTheThings not found at: {path}\n"
+            f"Path does not appear to be PayloadsAllTheThings: {path}\n"
+            "Expected category directories like 'SQL Injection', 'XSS Injection', etc.\n"
             "Clone with: git clone https://github.com/swisskyrepo/PayloadsAllTheThings.git"
         )
 
-    # Check for marker directories
-    markers = ["SQL Injection", "XSS Injection", "Command Injection"]
-    found = [m for m in markers if os.path.isdir(os.path.join(path, m))]
-    if len(found) < 2:
-        raise RuntimeError(
-            f"Path does not appear to be PayloadsAllTheThings: {path}\n"
-            "Expected category directories like 'SQL Injection', 'XSS Injection', etc."
-        )
-
-    # Check git info
     git_dir = os.path.join(path, ".git")
     has_git = os.path.isdir(git_dir)
 
     return {
         "path": os.path.abspath(path),
         "has_git": has_git,
-        "marker_categories_found": found,
     }

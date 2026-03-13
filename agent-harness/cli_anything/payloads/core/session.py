@@ -2,6 +2,7 @@
 
 import json
 import os
+import sys
 import time
 from pathlib import Path
 
@@ -44,8 +45,8 @@ class Session:
         try:
             with open(self.session_file, "w") as f:
                 json.dump(self._state, f, indent=2)
-        except OSError:
-            pass
+        except OSError as e:
+            print(f"Warning: could not save session: {e}", file=sys.stderr)
 
     @property
     def current_category(self) -> str | None:

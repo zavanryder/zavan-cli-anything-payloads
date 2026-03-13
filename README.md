@@ -273,15 +273,18 @@ claude
 source agent-harness/.venv/bin/activate && cli-anything-payloads --repo ./PayloadsAllTheThings --json list
 ```
 
-You can also add a `CLAUDE.md` to the repo root to make it automatic:
+### CLAUDE.md
 
-```markdown
-# CLAUDE.md
-When using cli-anything-payloads, always activate the venv first:
-  source agent-harness/.venv/bin/activate
-Always pass: --repo ./PayloadsAllTheThings
-Use --json for all queries so you can parse the output.
-```
+This repo includes a [`CLAUDE.md`](./CLAUDE.md) file in the project root. Claude Code automatically reads `CLAUDE.md` at the start of every conversation when working in this directory, so it already knows how to use the tool without being told.
+
+The file contains:
+- **Activation command** — the exact `source ... && cli-anything-payloads` invocation pattern so Claude always activates the venv and passes `--repo`
+- **Command reference table** — every subcommand with its purpose and a concrete example, so Claude can pick the right one without running `--help` first
+- **Fuzzy matching guide** — explains that short names like `"sql"` and `"proto"` work, so Claude doesn't waste time typing full directory names
+- **Recommended workflow** — the Discover → Search → Drill down → Export → Synthesize pattern that produces the best results
+- **Gotchas** — `--json` must come before the subcommand, `--overwrite` is needed for existing files, etc.
+
+This means you can just open Claude Code in this directory and ask payload-related questions directly — no setup instructions needed in your prompt.
 
 ### Example Prompts and What Claude Does
 
@@ -400,6 +403,7 @@ The typical Claude Code workflow with this tool is:
 ```
 PayloadOfAllThings/
 ├── README.md                          # This file
+├── CLAUDE.md                          # Agent instructions (auto-loaded by Claude Code)
 ├── PayloadsAllTheThings/              # The upstream repo (hard dependency)
 └── agent-harness/
     ├── PAYLOADS.md                    # Software-specific SOP

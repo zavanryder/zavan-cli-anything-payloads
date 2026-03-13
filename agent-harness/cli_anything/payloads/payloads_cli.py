@@ -14,7 +14,7 @@ from cli_anything.payloads.core.repository import (
     find_repo, list_categories, category_info, repo_stats, resolve_category,
 )
 from cli_anything.payloads.core.parser import (
-    extract_code_blocks, extract_sections, read_intruder_file, count_code_blocks,
+    extract_code_blocks, extract_sections, read_intruder_file,
 )
 from cli_anything.payloads.core.search import search, search_categories
 from cli_anything.payloads.core.export import (
@@ -64,7 +64,6 @@ def cli(ctx, repo, json_mode):
         except RuntimeError as e:
             click.echo(str(e), err=True)
             ctx.exit(1)
-            return
     ctx.obj["repo_path"] = repo_path
 
     if ctx.invoked_subcommand is None:
@@ -83,7 +82,6 @@ def list_cmd(ctx, name_filter):
     if not repo:
         click.echo("Error: --repo is required (or set PAYLOADS_REPO)", err=True)
         ctx.exit(1)
-        return
 
     cats = list_categories(repo)
     if name_filter:
@@ -133,14 +131,12 @@ def show_cmd(ctx, category, filename, sections):
     if not repo:
         click.echo("Error: --repo is required", err=True)
         ctx.exit(1)
-        return
 
     try:
         cat_name = resolve_category(repo, category)
     except ValueError as e:
         click.echo(f"Error: {e}", err=True)
         ctx.exit(1)
-        return
 
     cat_path = os.path.join(repo, cat_name)
     target = filename or "README.md"
@@ -150,7 +146,6 @@ def show_cmd(ctx, category, filename, sections):
         available = [f for f in os.listdir(cat_path) if f.endswith(".md")]
         click.echo(f"Error: {target} not found. Available: {', '.join(available)}", err=True)
         ctx.exit(1)
-        return
 
     if sections:
         secs = extract_sections(fpath)
@@ -194,7 +189,6 @@ def info_cmd(ctx, category):
     if not repo:
         click.echo("Error: --repo is required", err=True)
         ctx.exit(1)
-        return
 
     if category:
         try:
@@ -202,7 +196,6 @@ def info_cmd(ctx, category):
         except ValueError as e:
             click.echo(f"Error: {e}", err=True)
             ctx.exit(1)
-            return
 
         def _human(d):
             click.echo(f"\n  Category: {d['name']}")
@@ -249,9 +242,10 @@ def info_cmd(ctx, category):
               help="Treat query as a regex pattern.")
 @click.option("--case-sensitive", "-s", is_flag=True, default=False,
               help="Case-sensitive search.")
-@click.option("--max-results", "-n", default=50, help="Maximum results.")
+@click.option("--max-results", "-n", default=50, type=click.IntRange(min=1),
+              help="Maximum results.")
 @click.option("--context", "-C", "context_lines", default=1,
-              help="Context lines around matches.")
+              type=click.IntRange(min=0), help="Context lines around matches.")
 @click.pass_context
 def search_cmd(ctx, query, category, file_type, regex, case_sensitive,
                max_results, context_lines):
@@ -260,7 +254,6 @@ def search_cmd(ctx, query, category, file_type, regex, case_sensitive,
     if not repo:
         click.echo("Error: --repo is required", err=True)
         ctx.exit(1)
-        return
 
     if category:
         try:
@@ -268,7 +261,6 @@ def search_cmd(ctx, query, category, file_type, regex, case_sensitive,
         except ValueError as e:
             click.echo(f"Error: {e}", err=True)
             ctx.exit(1)
-            return
 
     try:
         results = search(repo, query, category=category, file_type=file_type,
@@ -277,7 +269,6 @@ def search_cmd(ctx, query, category, file_type, regex, case_sensitive,
     except ValueError as e:
         click.echo(f"Error: {e}", err=True)
         ctx.exit(1)
-        return
 
     data = {
         "query": query,
@@ -321,14 +312,12 @@ def extract_cmd(ctx, category, language, section, filename, block_index):
     if not repo:
         click.echo("Error: --repo is required", err=True)
         ctx.exit(1)
-        return
 
     try:
         cat_name = resolve_category(repo, category)
     except ValueError as e:
         click.echo(f"Error: {e}", err=True)
         ctx.exit(1)
-        return
 
     cat_path = os.path.join(repo, cat_name)
 
@@ -339,7 +328,6 @@ def extract_cmd(ctx, category, language, section, filename, block_index):
         if not os.path.isfile(fpath):
             click.echo(f"Error: {filename} not found in {cat_name}", err=True)
             ctx.exit(1)
-            return
         all_blocks = extract_code_blocks(fpath, language=language,
                                          section_filter=section)
     else:
@@ -355,7 +343,6 @@ def extract_cmd(ctx, category, language, section, filename, block_index):
         if block_index < 1 or block_index > len(all_blocks):
             click.echo(f"Error: Block index {block_index} out of range (1-{len(all_blocks)})", err=True)
             ctx.exit(1)
-            return
         all_blocks = [all_blocks[block_index - 1]]
 
     data = {
@@ -395,20 +382,17 @@ def intruder_cmd(ctx, category, filename, head_count):
     if not repo:
         click.echo("Error: --repo is required", err=True)
         ctx.exit(1)
-        return
 
     try:
         cat_name = resolve_category(repo, category)
     except ValueError as e:
         click.echo(f"Error: {e}", err=True)
         ctx.exit(1)
-        return
 
     intruder_dir = os.path.join(repo, cat_name, "Intruder")
     if not os.path.isdir(intruder_dir):
         click.echo(f"Error: No Intruder directory in '{cat_name}'", err=True)
         ctx.exit(1)
-        return
 
     if filename:
         fpath = os.path.join(intruder_dir, filename)
@@ -418,7 +402,6 @@ def intruder_cmd(ctx, category, filename, head_count):
             click.echo(f"Error: File not found: {filename}", err=True)
             click.echo(f"Available: {', '.join(available)}", err=True)
             ctx.exit(1)
-            return
 
         payloads = read_intruder_file(fpath)
         if head_count:
@@ -487,7 +470,6 @@ def export_blocks_cmd(ctx, category, output, language, section, fmt, overwrite):
     if not repo:
         click.echo("Error: --repo is required", err=True)
         ctx.exit(1)
-        return
 
     try:
         result = export_code_blocks(repo, category, output,
@@ -496,7 +478,6 @@ def export_blocks_cmd(ctx, category, output, language, section, fmt, overwrite):
     except (ValueError, FileExistsError) as e:
         click.echo(f"Error: {e}", err=True)
         ctx.exit(1)
-        return
 
     def _human(d):
         click.echo(f"\n  Exported {d['block_count']} code blocks from '{d['category']}'")
@@ -523,7 +504,6 @@ def export_intruder_cmd(ctx, category, output, filename, deduplicate, overwrite)
     if not repo:
         click.echo("Error: --repo is required", err=True)
         ctx.exit(1)
-        return
 
     try:
         result = export_intruder(repo, category, output,
@@ -532,7 +512,6 @@ def export_intruder_cmd(ctx, category, output, filename, deduplicate, overwrite)
     except (ValueError, FileExistsError) as e:
         click.echo(f"Error: {e}", err=True)
         ctx.exit(1)
-        return
 
     def _human(d):
         click.echo(f"\n  Exported {d['payload_count']} payloads from '{d['category']}'")
@@ -555,14 +534,12 @@ def export_markdown_cmd(ctx, category, output, overwrite):
     if not repo:
         click.echo("Error: --repo is required", err=True)
         ctx.exit(1)
-        return
 
     try:
         result = export_category_markdown(repo, category, output, overwrite=overwrite)
     except (ValueError, FileExistsError) as e:
         click.echo(f"Error: {e}", err=True)
         ctx.exit(1)
-        return
 
     def _human(d):
         click.echo(f"\n  Exported markdown from '{d['category']}'")
@@ -628,7 +605,7 @@ def session_favorite(ctx, category, remove):
         try:
             category = resolve_category(repo, category)
         except ValueError:
-            pass  # Allow favoriting even without repo validation
+            click.echo(f"Warning: '{category}' could not be resolved to a known category", err=True)
 
     session = Session()
     if remove:
@@ -648,6 +625,256 @@ def session_favorite(ctx, category, remove):
 
 # ── REPL ──────────────────────────────────────────────────────────────
 
+class _ReplState:
+    """Mutable state shared across REPL command handlers."""
+
+    def __init__(self, ctx, skin, session):
+        self.ctx = ctx
+        self.skin = skin
+        self.session = session
+
+    @property
+    def repo(self):
+        return self.ctx.obj.get("repo_path")
+
+    @repo.setter
+    def repo(self, value):
+        self.ctx.obj["repo_path"] = value
+
+    def require_repo(self) -> str | None:
+        if not self.repo:
+            self.skin.error("No repository set")
+            return None
+        return self.repo
+
+    def resolve_target(self, args) -> str | None:
+        return " ".join(args) if args else self.session.current_category
+
+
+def _repl_set_repo(state, args):
+    if not args:
+        state.skin.error("Usage: set-repo <path>")
+        return
+    try:
+        state.repo = find_repo(args[0])
+        state.skin.success(f"Repository: {state.repo}")
+    except RuntimeError as e:
+        state.skin.error(str(e))
+
+
+def _repl_cd(state, args):
+    if not args:
+        state.session.current_category = None
+        state.skin.info("Cleared current category")
+        return
+    repo = state.require_repo()
+    if not repo:
+        return
+    try:
+        cat_name = resolve_category(repo, " ".join(args))
+        state.session.current_category = cat_name
+        state.skin.success(f"Category: {cat_name}")
+    except ValueError as e:
+        state.skin.error(str(e))
+
+
+def _repl_list(state, args):
+    repo = state.require_repo()
+    if not repo:
+        return
+    cats = list_categories(repo)
+    name_filter = " ".join(args) if args else None
+    if name_filter:
+        cats = [c for c in cats if name_filter.lower() in c["name"].lower()]
+    state.skin.table(
+        ["Category", "MD Files", "Intruder", "Files"],
+        [[c["name"], str(len(c["md_files"])),
+          str(len(c["intruder_files"])) if c["has_intruder"] else "-",
+          "yes" if c["has_files"] else "-"] for c in cats],
+    )
+
+
+def _repl_show(state, args):
+    repo = state.require_repo()
+    if not repo:
+        return
+    target = state.resolve_target(args)
+    if not target:
+        state.skin.error("Usage: show <category>")
+        return
+    try:
+        cat_name = resolve_category(repo, target)
+        secs = extract_sections(os.path.join(repo, cat_name, "README.md"))
+        state.skin.section(cat_name)
+        for s in secs:
+            indent = "  " * (s["level"] - 1)
+            blocks = f" [{s['code_block_count']}]" if s["code_block_count"] else ""
+            click.echo(f"  {indent}{s['title']}{blocks}")
+    except (ValueError, FileNotFoundError) as e:
+        state.skin.error(str(e))
+
+
+def _repl_info(state, args):
+    repo = state.require_repo()
+    if not repo:
+        return
+    target = state.resolve_target(args)
+    if target:
+        try:
+            info = category_info(repo, target)
+            state.skin.status_block({
+                "Category": info["name"],
+                "MD files": str(len(info["md_files"])),
+                "Intruder": str(len(info["intruder_files"])),
+                "Samples": str(len(info["sample_files"])),
+                "Images": str(len(info["image_files"])),
+            })
+        except ValueError as e:
+            state.skin.error(str(e))
+    else:
+        stats = repo_stats(repo)
+        state.skin.status_block({
+            "Categories": str(stats["categories"]),
+            "Markdown files": str(stats["markdown_files"]),
+            "Intruder wordlists": str(stats["intruder_wordlists"]),
+            "Sample files": str(stats["sample_files"]),
+        })
+
+
+def _repl_search(state, args):
+    repo = state.require_repo()
+    if not repo:
+        return
+    if not args:
+        state.skin.error("Usage: search <query>")
+        return
+    query = " ".join(args)
+    state.session.add_search(query)
+    cat_filter = state.session.current_category
+    results = search(repo, query, category=cat_filter, max_results=20)
+    if not results:
+        state.skin.warning(f"No results for '{query}'")
+    else:
+        state.skin.info(f"{len(results)} matches for '{query}'")
+        for r in results:
+            click.echo(f"    {r.file_path}:{r.line_number}")
+            click.echo(f"      {r.line_content[:120]}")
+
+
+def _repl_extract(state, args):
+    repo = state.require_repo()
+    if not repo:
+        return
+    target = state.resolve_target(args)
+    if not target:
+        state.skin.error("Usage: extract <category>")
+        return
+    try:
+        cat_name = resolve_category(repo, target)
+    except ValueError as e:
+        state.skin.error(str(e))
+        return
+
+    cat_path = os.path.join(repo, cat_name)
+    blocks = []
+    for fname in sorted(os.listdir(cat_path)):
+        if fname.endswith(".md"):
+            blocks.extend(extract_code_blocks(os.path.join(cat_path, fname)))
+
+    if not blocks:
+        state.skin.warning("No code blocks found")
+        return
+
+    state.skin.info(f"{len(blocks)} code blocks")
+    langs = {}
+    for b in blocks:
+        lang = b.language or "(none)"
+        langs[lang] = langs.get(lang, 0) + 1
+    for lang, count in sorted(langs.items()):
+        state.skin.status(lang, str(count))
+    click.echo()
+    for i, b in enumerate(blocks[:10], 1):
+        lang_tag = f" [{b.language}]" if b.language else ""
+        click.echo(f"  --- {i}{lang_tag} ({b.section}) ---")
+        for ln in b.content.split("\n")[:3]:
+            click.echo(f"    {ln}")
+        if b.content.count("\n") > 3:
+            click.echo("    ...")
+    if len(blocks) > 10:
+        state.skin.hint(f"  ... and {len(blocks) - 10} more")
+
+
+def _repl_intruder(state, args):
+    repo = state.require_repo()
+    if not repo:
+        return
+    target = state.resolve_target(args)
+    if not target:
+        state.skin.error("Usage: intruder <category>")
+        return
+    try:
+        cat_name = resolve_category(repo, target)
+        intruder_dir = os.path.join(repo, cat_name, "Intruder")
+        if not os.path.isdir(intruder_dir):
+            state.skin.warning(f"No Intruder directory in '{cat_name}'")
+            return
+        for f in sorted(os.listdir(intruder_dir)):
+            fpath = os.path.join(intruder_dir, f)
+            if os.path.isfile(fpath):
+                count = len(read_intruder_file(fpath))
+                state.skin.status(f, f"{count} payloads")
+    except ValueError as e:
+        state.skin.error(str(e))
+
+
+def _repl_favorites(state, args):
+    favs = state.session.favorites
+    if not favs:
+        state.skin.info("No favorites yet. Use: fav <category>")
+    else:
+        state.skin.section("Favorites")
+        for f in favs:
+            click.echo(f"    {f}")
+
+
+def _repl_fav(state, args):
+    if not args:
+        state.skin.error("Usage: fav <category>")
+        return
+    cat_name = " ".join(args)
+    if state.repo:
+        try:
+            cat_name = resolve_category(state.repo, cat_name)
+        except ValueError:
+            pass
+    if cat_name in state.session.favorites:
+        state.session.remove_favorite(cat_name)
+        state.skin.info(f"Removed: {cat_name}")
+    else:
+        state.session.add_favorite(cat_name)
+        state.skin.success(f"Added: {cat_name}")
+
+
+def _repl_export(state, args):
+    state.skin.info("Export subcommands: blocks, intruder, markdown")
+    state.skin.hint("Use CLI mode: cli-anything-payloads export blocks <cat> <out>")
+
+
+_REPL_DISPATCH = {
+    "set-repo": _repl_set_repo,
+    "cd": _repl_cd,
+    "list": _repl_list,
+    "show": _repl_show,
+    "info": _repl_info,
+    "search": _repl_search,
+    "extract": _repl_extract,
+    "intruder": _repl_intruder,
+    "favorites": _repl_favorites,
+    "fav": _repl_fav,
+    "export": _repl_export,
+}
+
+
 @cli.command("repl", hidden=True)
 @click.pass_context
 def repl(ctx):
@@ -665,8 +892,9 @@ def repl(ctx):
 
     session = Session()
     pt_session = skin.create_prompt_session()
+    state = _ReplState(ctx, skin, session)
 
-    commands = {
+    help_commands = {
         "list": "List vulnerability categories",
         "show <category>": "Show category documentation",
         "info [category]": "Show category or repo info",
@@ -700,205 +928,10 @@ def repl(ctx):
             if cmd in ("quit", "exit", "q"):
                 skin.print_goodbye()
                 break
-
             elif cmd == "help":
-                skin.help(commands)
-
-            elif cmd == "set-repo" and args:
-                try:
-                    new_repo = find_repo(args[0])
-                    ctx.obj["repo_path"] = new_repo
-                    repo = new_repo
-                    skin.success(f"Repository: {repo}")
-                except RuntimeError as e:
-                    skin.error(str(e))
-
-            elif cmd == "cd":
-                if not args:
-                    session.current_category = None
-                    skin.info("Cleared current category")
-                elif not repo:
-                    skin.error("No repository set")
-                else:
-                    try:
-                        cat_name = resolve_category(repo, " ".join(args))
-                        session.current_category = cat_name
-                        skin.success(f"Category: {cat_name}")
-                    except ValueError as e:
-                        skin.error(str(e))
-
-            elif cmd == "list":
-                if not repo:
-                    skin.error("No repository set")
-                    continue
-                cats = list_categories(repo)
-                name_filter = " ".join(args) if args else None
-                if name_filter:
-                    cats = [c for c in cats if name_filter.lower() in c["name"].lower()]
-                skin.table(
-                    ["Category", "MD Files", "Intruder", "Files"],
-                    [[c["name"], str(len(c["md_files"])),
-                      str(len(c["intruder_files"])) if c["has_intruder"] else "-",
-                      "yes" if c["has_files"] else "-"] for c in cats],
-                )
-
-            elif cmd == "show":
-                if not repo:
-                    skin.error("No repository set")
-                    continue
-                target = " ".join(args) if args else session.current_category
-                if not target:
-                    skin.error("Usage: show <category>")
-                    continue
-                try:
-                    cat_name = resolve_category(repo, target)
-                    secs = extract_sections(os.path.join(repo, cat_name, "README.md"))
-                    skin.section(cat_name)
-                    for s in secs:
-                        indent = "  " * (s["level"] - 1)
-                        blocks = f" [{s['code_block_count']}]" if s["code_block_count"] else ""
-                        click.echo(f"  {indent}{s['title']}{blocks}")
-                except (ValueError, FileNotFoundError) as e:
-                    skin.error(str(e))
-
-            elif cmd == "info":
-                if not repo:
-                    skin.error("No repository set")
-                    continue
-                target = " ".join(args) if args else session.current_category
-                if target:
-                    try:
-                        info = category_info(repo, target)
-                        skin.status_block({
-                            "Category": info["name"],
-                            "MD files": str(len(info["md_files"])),
-                            "Intruder": str(len(info["intruder_files"])),
-                            "Samples": str(len(info["sample_files"])),
-                            "Images": str(len(info["image_files"])),
-                        })
-                    except ValueError as e:
-                        skin.error(str(e))
-                else:
-                    stats = repo_stats(repo)
-                    skin.status_block({
-                        "Categories": str(stats["categories"]),
-                        "Markdown files": str(stats["markdown_files"]),
-                        "Intruder wordlists": str(stats["intruder_wordlists"]),
-                        "Sample files": str(stats["sample_files"]),
-                    })
-
-            elif cmd == "search":
-                if not repo:
-                    skin.error("No repository set")
-                    continue
-                if not args:
-                    skin.error("Usage: search <query>")
-                    continue
-                query = " ".join(args)
-                session.add_search(query)
-                cat_filter = session.current_category
-                results = search(repo, query, category=cat_filter, max_results=20)
-                if not results:
-                    skin.warning(f"No results for '{query}'")
-                else:
-                    skin.info(f"{len(results)} matches for '{query}'")
-                    for r in results:
-                        click.echo(f"    {r.file_path}:{r.line_number}")
-                        click.echo(f"      {r.line_content[:120]}")
-
-            elif cmd == "extract":
-                if not repo:
-                    skin.error("No repository set")
-                    continue
-                target = " ".join(args) if args else session.current_category
-                if not target:
-                    skin.error("Usage: extract <category>")
-                    continue
-                try:
-                    cat_name = resolve_category(repo, target)
-                    cat_path = os.path.join(repo, cat_name)
-                    blocks = []
-                    for fname in sorted(os.listdir(cat_path)):
-                        if fname.endswith(".md"):
-                            blocks.extend(extract_code_blocks(
-                                os.path.join(cat_path, fname)))
-                    if not blocks:
-                        skin.warning("No code blocks found")
-                    else:
-                        skin.info(f"{len(blocks)} code blocks")
-                        langs = {}
-                        for b in blocks:
-                            l = b.language or "(none)"
-                            langs[l] = langs.get(l, 0) + 1
-                        for lang, count in sorted(langs.items()):
-                            skin.status(lang, str(count))
-                        click.echo()
-                        for i, b in enumerate(blocks[:10], 1):
-                            l = f" [{b.language}]" if b.language else ""
-                            click.echo(f"  --- {i}{l} ({b.section}) ---")
-                            # Show first 3 lines
-                            for ln in b.content.split("\n")[:3]:
-                                click.echo(f"    {ln}")
-                            if b.content.count("\n") > 3:
-                                click.echo(f"    ...")
-                        if len(blocks) > 10:
-                            skin.hint(f"  ... and {len(blocks) - 10} more")
-                except ValueError as e:
-                    skin.error(str(e))
-
-            elif cmd == "intruder":
-                if not repo:
-                    skin.error("No repository set")
-                    continue
-                target = " ".join(args) if args else session.current_category
-                if not target:
-                    skin.error("Usage: intruder <category>")
-                    continue
-                try:
-                    cat_name = resolve_category(repo, target)
-                    intruder_dir = os.path.join(repo, cat_name, "Intruder")
-                    if not os.path.isdir(intruder_dir):
-                        skin.warning(f"No Intruder directory in '{cat_name}'")
-                    else:
-                        files = sorted(os.listdir(intruder_dir))
-                        for f in files:
-                            fpath = os.path.join(intruder_dir, f)
-                            if os.path.isfile(fpath):
-                                count = len(read_intruder_file(fpath))
-                                skin.status(f, f"{count} payloads")
-                except ValueError as e:
-                    skin.error(str(e))
-
-            elif cmd == "favorites":
-                favs = session.favorites
-                if not favs:
-                    skin.info("No favorites yet. Use: fav <category>")
-                else:
-                    skin.section("Favorites")
-                    for f in favs:
-                        click.echo(f"    {f}")
-
-            elif cmd == "fav":
-                if not args:
-                    skin.error("Usage: fav <category>")
-                    continue
-                cat = " ".join(args)
-                if repo:
-                    try:
-                        cat = resolve_category(repo, cat)
-                    except ValueError:
-                        pass
-                if cat in session.favorites:
-                    session.remove_favorite(cat)
-                    skin.info(f"Removed: {cat}")
-                else:
-                    session.add_favorite(cat)
-                    skin.success(f"Added: {cat}")
-
-            elif cmd == "export":
-                skin.info("Export subcommands: blocks, intruder, markdown")
-                skin.hint("Use CLI mode: cli-anything-payloads export blocks <cat> <out>")
-
+                skin.help(help_commands)
+            elif cmd in _REPL_DISPATCH:
+                _REPL_DISPATCH[cmd](state, args)
             else:
                 skin.warning(f"Unknown command: {cmd}. Type 'help' for commands.")
 
